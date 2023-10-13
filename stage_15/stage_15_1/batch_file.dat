@@ -1,0 +1,12 @@
+load --os $HOME/myexpos/stage_15/stage_15_1/os_startup.xsm
+load --init $HOME/myexpos/stage_15/stage_15_1/init.xsm
+load --exhandler $HOME/myexpos/stage_15/stage_15_1/exception.xsm
+load --int=10 $HOME/myexpos/stage_15/stage_15_1/exit.xsm
+load --int=timer $HOME/myexpos/stage_15/stage_15_1/timer.xsm
+load --int=7 $HOME/myexpos/stage_15/stage_15_1/write.xsm
+load --idle $HOME/myexpos/stage_15/stage_15_1/idle.xsm
+load --module 7 $HOME/myexpos/stage_15/stage_15_1/mod_7.xsm
+load --module 5 $HOME/myexpos/stage_15/stage_15_1/mod_5.xsm
+load --module 4 $HOME/myexpos/stage_15/stage_15_1/mod_4.xsm
+load --module 0 $HOME/myexpos/stage_15/stage_15_1/mod_0.xsm
+load --library $HOME/myexpos/expl/library.lib
