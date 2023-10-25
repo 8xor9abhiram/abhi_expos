@@ -17,32 +17,20 @@ i = i+1;
 newPID = 0;
 
 while(i!=j) do
-
-i=i%16;
-status = [PROCESS_TABLE + i*16 + 4];
-
-if(status == CREATED) then
-
-newPID =i;
-break;
-
-endif;
-
-if(status == READY) then
-
-newPID =i;
-break;
-
-endif;
-
-i = i+1;
-
-if(i==0) then
-
-i=1;
-
-endif;
-
+      i=i%16;
+      status = [PROCESS_TABLE + i*16 + 4];
+      if(status == CREATED) then
+         newPID =i;
+         break;
+      endif;
+      if(status == READY) then
+         newPID =i;
+         break;
+      endif;
+      i = i+1;
+      if(i==0) then
+         i=1;
+      endif;
 endwhile;
 
 alias new_process_table R4;

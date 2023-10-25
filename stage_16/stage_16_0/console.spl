@@ -2,11 +2,9 @@
 SP = [PROCESS_TABLE +([SYSTEM_STATUS_TABLE+1]*16) +11]*512 -1;
 backup;
 
-
 alias reqPID R0;
 
 reqPID = [TERMINAL_STATUS_TABLE + 1];
-
 [PROCESS_TABLE + reqPID*16 + 8] = P0;
 
 multipush(R0);
