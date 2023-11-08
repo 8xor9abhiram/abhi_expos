@@ -1,0 +1,19 @@
+int main()
+{
+  decl
+  
+  int t;
+  //string name;
+  enddecl
+  
+  begin
+     //name="abhiram";
+     while(1==1) do
+           //t = exposcall("Write", -2, name);
+           t=1;
+     endwhile;
+  
+     return 0;
+  end
+  
+}

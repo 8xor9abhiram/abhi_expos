@@ -1,0 +1,75 @@
+alias fun_num R1;
+
+//free usr ara page
+if(fun_num == 2)  then
+   alias user_area_page R3;
+   user_area_page = [PROCESS_TABLE + R2*16 + 11];
+   multipush(R1,R2,R3);
+   R1 = 2;
+   R2 = user_area_page;
+   call MOD_2;
+   multipop(R1,R2,R3);
+   return;
+endif;
+
+//exit process
+if(fun_num == 3)  then 
+   alias PID R2;
+
+   //free user area page
+   multipush(R1,R2);
+   R1 = 2;
+   call MOD_1;
+   multipop(R1,R2);
+
+   //free page_table
+   multipush(R1,R2);
+   R1 = 4;
+   call MOD_1;
+   multipop(R1,R2);
+
+   [PROCESS_TABLE + (PID*16) + 4] = TERMINATED;
+   return;
+endif;
+
+//free pagetable
+if(fun_num == 4)  then 
+   alias PID R2;
+   [PAGE_TABLE_BASE + PID*20 + 0] = -1;
+   [PAGE_TABLE_BASE + PID*20 + 1] = "0000";
+   [PAGE_TABLE_BASE + PID*20 + 2] = -1;
+   [PAGE_TABLE_BASE + PID*20 + 3] = "0000";
+   alias i R3;
+   i=4;
+   while(i<20)  do
+        if([PAGE_TABLE_BASE + PID*20 + i]!= -1)  then
+           multipush(R1,R2,R3);
+           R1 = 2;
+           R2 = [PAGE_TABLE_BASE + PID*20 + i];
+           call MOD_2;
+           multipop(R1,R2,R3);
+           [PAGE_TABLE_BASE + PID*20 + i] = -1;
+           [PAGE_TABLE_BASE + PID*20 + i+1] ="0000";
+        endif;
+        i = i+2;
+   endwhile;
+
+   alias j R4;
+   j=2;
+   while(j<10)do
+        if([DISK_MAP_TABLE + PID*10 + j]!=-1)then
+           if(j==2 || j==3 || j==8 || j==9)then
+              multipush(R1,R2,R3);
+              R1 = 4;
+              R3 = PID; //R2 is PID'alias
+              R2 = [DISK_MAP_TABLE + PID*10 + j];
+              call MOD_2;
+              multipop(R1,R2,R3);
+            endif;
+            [DISK_MAP_TABLE + PID*10 + j] =-1;
+        endif;
+        j=j+1;
+   endwhile;     
+   
+   return;
+endif;

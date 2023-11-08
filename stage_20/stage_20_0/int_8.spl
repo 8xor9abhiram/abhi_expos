@@ -1,0 +1,138 @@
+alias user_SP R0;
+alias child_pid R1;
+
+[PROCESS_TABLE + 16*[SYSTEM_STATUS_TABLE + 1] + 9] = 8;
+[PROCESS_TABLE + 16*[SYSTEM_STATUS_TABLE + 1] + 13] = SP;
+user_SP=SP;
+SP = [PROCESS_TABLE + 16*[SYSTEM_STATUS_TABLE + 1] + 11];
+
+//get pcb entry   in mod1 , args: none ,returns: availble pid | -1
+multipush(R0);
+R1 = 1;
+call MOD_1;
+child_pid=R0;
+multipop(R0);
+
+if(child_pid == -1)then
+   SP = [PROCESS_TABLE + 16*[SYSTEM_STATUS_TABLE + 1] + 13];
+   [PROCESS_TABLE + 16*[SYSTEM_STATUS_TABLE + 1] + 9] = 0;
+   [ [PTBR + 2*(SP-1)/512]*512 + (SP-1)%512] = -1;
+   ireturn;
+endif;
+
+    //elsecase
+
+//check if heap loaded for parent if not , load it .PTBR+4,5,6,7 for heap 
+   
+if([PTBR + 4] == -1)then
+     //get two free pages
+     multipush(R0,R1);
+     R1 = 1;
+     call MOD_2;
+     [PTBR + 4] = R0;
+     [PTBR + 5] = "0110";
+     R1 = 1;
+     call MOD_2;
+     [PTBR + 6] = R0;
+     [PTBR + 7] = "0110";
+     multipop(R0,R1);
+endif;
+
+//get 3 free pages for stack(2) and user area page (1)
+
+alias spage1 R2;
+multipush(R0,R1);
+R1=1;
+call MOD_2;
+spage1=R0;
+multipop(R0,R1);
+
+alias spage2 R3;
+multipush(R0,R1,R2);
+R1=1;
+call MOD_2;
+spage2=R0;
+multipop(R0,R1,R2);
+
+alias uapage R4;
+multipush(R0,R1,R2,R3);
+R1=1;
+call MOD_2;
+uapage=R0;
+multipop(R0,R1,R2,R3);
+
+// process table initialization for child 
+alias child_pcb R5;
+alias parent_pcb R6;
+
+child_pcb = PROCESS_TABLE + child_pid*16;
+parent_pcb = PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1]*16;
+
+[child_pcb + 0] = 0;                        //tick
+//[child_pcb + 1] = child_pid;              //pid  already initialzd in get pcb 
+[child_pcb + 2] = [SYSTEM_STATUS_TABLE+1];  //ppid
+[child_pcb + 3] = [parent_pcb + 3];         //userid
+[child_pcb + 4] = CREATED;                  //state
+[child_pcb + 6] = [parent_pcb + 6];         //swap flag
+[child_pcb + 7] = [parent_pcb + 7];         //inode index
+//[child_pcb + 8] no initialization reqfor    input buffer field
+[child_pcb + 9] = 0;                        //mode flag 
+[child_pcb + 10] = [parent_pcb + 10];       // ua swap status
+[child_pcb + 11] = uapage;                  //user area page
+[child_pcb + 12] = 0;                       // kernel sp
+[child_pcb + 13] = [parent_pcb + 13];       // user sp 
+//[child_pcb + 14] already inz in get pcb   //PTBR
+//[child_pcb + 15]         ||               //ptlr
+
+// setting per process resource table 
+alias i R7;
+i=1;
+while(i<17)do
+      [[child_pcb+11]*512-i]=[[parent_pcb+11]*512-i];
+      i=i+1;
+endwhile;
+
+//per process disk map table
+i=0;
+while(i<10) do
+  [DISK_MAP_TABLE + child_pid*10 + i] = [DISK_MAP_TABLE + [parent_pcb +1]*10 + i];
+  i = i + 1;
+endwhile;
+
+// page table initialization
+
+alias child_ptbr R8;
+child_ptbr = [child_pcb + 14];
+
+// library,heap,code entires same. (shared memory)
+i=0;
+while(i<16) do
+ [child_ptbr + i] = [PTBR + i];
+ if(i%2 == 0) then
+   if([PTBR + i] != -1) then
+     [MEMORY_FREE_LIST + [PTBR + i]] = [MEMORY_FREE_LIST + [PTBR + i]] + 1;
+   endif;
+ endif;
+i = i + 1;
+endwhile;
+// allocate new pages found ealrier 
+[child_ptbr + 16] = spage1;
+[child_ptbr + 17] = [PTBR + 17];
+[child_ptbr + 18] = spage2;
+[child_ptbr + 19] = [PTBR + 19];
+// copy the parent stack into child stack
+i=0;
+while(i<512) do
+  [[child_ptbr + 16]*512 + i] = [[PTBR + 16]*512 + i];
+  [[child_ptbr + 18]*512 + i] = [[PTBR + 18]*512 + i];
+i=i+1;
+endwhile;
+
+[[child_pcb + 11]*512 ] = BP;
+
+//setting up the return values
+[[child_ptbr + 2*(user_SP-1)/512] *512 + ((user_SP-1)%512)] = 0;
+[[PTBR + 2*(user_SP-1)/512] *512 + ((user_SP-1)%512)] = child_pid;
+[parent_pcb + 9] = 0;
+SP = user_SP;
+ireturn;

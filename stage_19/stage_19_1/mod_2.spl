@@ -1,0 +1,112 @@
+alias fun_num R1;
+
+//get free page
+if (fun_num == 1) then 
+
+    //breakpoint;
+
+    alias page_num  R0;
+    [SYSTEM_STATUS_TABLE + 3] = [SYSTEM_STATUS_TABLE + 3]+1; //wait_mem_count
+    while([SYSTEM_STATUS_TABLE + 2] == 0)  do //mem_free_count
+          [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE +1]*16) + 4] = WAIT_MEM;
+          multipush(R0,R1);
+          call MOD_5;
+          multipop(R0,R1);
+    endwhile;
+    [SYSTEM_STATUS_TABLE + 2] =[SYSTEM_STATUS_TABLE + 2]-1;
+    [SYSTEM_STATUS_TABLE + 3] =[SYSTEM_STATUS_TABLE + 3]-1;
+    alias i R2;
+    i=0;
+    while(i<128) do
+         if([MEMORY_FREE_LIST + i] == 0 ) then 
+           [MEMORY_FREE_LIST + i] = 1;
+           page_num =i; //r0 
+           break;
+         endif;
+         i=i+1;
+    endwhile;
+
+    //breakpoint;
+
+    return;
+endif;
+
+//release page_num
+if(fun_num == 2) then 
+
+  //breakpoint;
+
+  [MEMORY_FREE_LIST + R2] =  [MEMORY_FREE_LIST + R2] -1;
+  if([MEMORY_FREE_LIST + R2]==0)  then
+    [SYSTEM_STATUS_TABLE + 2] =[SYSTEM_STATUS_TABLE + 2]+1;
+    alias i R3;
+    i = 0;
+    while(i<16)  do 
+         if([PROCESS_TABLE + i*16 + 4] ==WAIT_MEM) then
+            [PROCESS_TABLE + i*16 + 4] = READY;
+         endif;
+         i= i+1;
+    endwhile;
+  endif;
+
+  //breakpoint;
+  
+  return;
+endif;
+
+//get code page
+if(fun_num == 5)then
+   //R1 was fun_num ,R2 was argument ,R0 reserved for return val 
+
+   breakpoint;
+
+   alias i R3;
+   i=0;
+   while(i<16)do
+      alias j R4;
+      j=4;
+      while(j<=7)do
+            alias b R5;
+            b = [PAGE_TABLE_BASE+i*20+j*2+1];
+            if([DISK_MAP_TABLE+i*10+j]==R2 && ( b=="0100" || b =="1100" || b =="0110" || b =="1110" || b =="0101" || b =="1101" || b =="0111" || b =="1111" ))then
+                 alias page_num R0;
+                 page_num = [PAGE_TABLE_BASE + i*20 + j*2];
+                 [MEMORY_FREE_LIST + page_num] = [MEMORY_FREE_LIST + page_num] + 1;
+                 return;
+            endif;
+            j=j+1;
+      endwhile; 
+      i=i+1;
+   endwhile; 
+
+  //calling get free page
+   multipush(R1,R2);
+   R1 = 1;
+   call MOD_2;
+   multipop(R1,R2);
+
+   alias page_num R0;
+
+   //calling disk load
+   multipush(R0,R1,R2);
+   R1=2;
+   R4=R2; //R2 is the argument (blovk num)
+   R2=[SYSTEM_STATUS_TABLE+1];
+   R3=page_num;
+   call MOD_4;
+   multipop(R0,R1,R2);
+
+   breakpoint;
+
+   return;
+endif;
+
+//release block
+if(fun_num == 4) then
+   
+   alias block_number R2;
+   alias PID  R3;
+   [DISK_FREE_LIST + block_number ] = [DISK_FREE_LIST + block_number] - 1;
+   return;
+
+endif;

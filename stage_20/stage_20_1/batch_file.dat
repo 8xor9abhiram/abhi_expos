@@ -1,0 +1,19 @@
+load --os $HOME/myexpos/stage_20/stage_20_1/os_startup.xsm
+load --exhandler $HOME/myexpos/stage_20/stage_20_1/exception.xsm
+load --int=timer $HOME/myexpos/stage_20/stage_20_1/timer.xsm
+load --int=console $HOME/myexpos/stage_20/stage_20_1/console.xsm
+load --int=disk $HOME/myexpos/stage_20/stage_20_1/disk.xsm
+load --int=6 $HOME/myexpos/stage_20/stage_20_1/read.xsm
+load --int=7 $HOME/myexpos/stage_20/stage_20_1/write.xsm
+load --int=8 $HOME/myexpos/stage_20/stage_20_1/int_8.xsm
+load --int=9 $HOME/myexpos/stage_20/stage_20_1/int_9.xsm
+load --int=10 $HOME/myexpos/stage_20/stage_20_1/exit.xsm
+load --module 0 $HOME/myexpos/stage_20/stage_20_1/mod_0.xsm
+load --module 1 $HOME/myexpos/stage_20/stage_20_1/mod_1.xsm
+load --module 2 $HOME/myexpos/stage_20/stage_20_1/mod_2.xsm
+load --module 4 $HOME/myexpos/stage_20/stage_20_1/mod_4.xsm
+load --module 5 $HOME/myexpos/stage_20/stage_20_1/mod_5.xsm
+load --module 7 $HOME/myexpos/stage_20/stage_20_1/mod_7.xsm
+load --idle $HOME/myexpos/stage_20/stage_20_1/idle.xsm
+load --init $HOME/myexpos/stage_20/stage_20_1/init.xsm
+load --library $HOME/myexpos/expl/library.lib
